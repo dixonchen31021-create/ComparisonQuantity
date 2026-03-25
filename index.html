@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <title>基準量與比較量：全能教室</title>
+    <style>
+        :root { --base-red: #e74c3c; --comp-blue: #3498db; --boss-purple: #8e44ad; }
+        body { font-family: "Microsoft JhengHei", sans-serif; background-color: #e9ecef; display: flex; justify-content: center; padding: 20px; }
+        .main-container { background: white; width: 950px; border-radius: 25px; box-shadow: 0 20px 40px rgba(0,0,0,0.15); overflow: hidden; }
+        
+        /* 導覽列 */
+        .nav-tabs { display: flex; background: #34495e; }
+        .tab-link { flex: 1; padding: 15px; border: none; cursor: pointer; font-size: 1.1rem; color: #bdc3c7; background: transparent; font-weight: bold; transition: 0.3s; }
+        .tab-link.active { color: white; background: #2c3e50; border-bottom: 5px solid #f1c40f; }
+        
+        .content-section { display: none; padding: 40px; min-height: 550px; }
+        .content-section.active { display: block; }
+
+        /* 通用元件 */
+        .instruction { font-size: 1.1rem; color: #7f8c8d; margin-bottom: 20px; text-align: center; }
+        .quiz-card { background: #fff9db; padding: 25px; border-radius: 15px; border-left: 8px solid #f39c12; margin-bottom: 30px; font-size: 1.4rem; line-height: 1.6; }
+
+        /* 第一關：積木 */
+        .lab-visual { display: flex; flex-direction: column; gap: 30px; align-items: flex-start; margin: 30px 0; padding-left: 50px; }
+        .block-row { display: flex; align-items: center; gap: 20px; }
+        .block { height: 50px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; transition: width 0.3s; font-size: 1.1rem; }
+        .base-style { background-color: var(--base-red); box-shadow: 0 4px 0 #c0392b; }
+        .comp-style { background-color: var(--comp-blue); box-shadow: 0 4px 0 #2980b9; position: relative; }
+        
+        /* 拖拉區 */
+        .drag-box { display: flex; justify-content: center; gap: 20px; margin: 20px 0; }
+        .item { padding: 12px 25px; background: #2d3436; color: white; border-radius: 10px; cursor: grab; font-weight: bold; font-size: 1.1rem; box-shadow: 0 4px 0 #000; }
+        .drop-area { display: flex; align-items: center; justify-content: center; gap: 15px; background: #f1f2f6; padding: 25px; border-radius: 20px; margin-top: 15px; }
+        .slot { width: 160px; height: 65px; border: 3px dashed #bdc3c7; border-radius: 12px; display: flex; align-items: center; justify-content: center; background: white; font-size: 1.1rem; color: #95a5a6; transition: 0.3s; }
+        .slot.hover { border-color: var(--comp-blue); background: #ebfaff; }
+        .slot.filled { border-style: solid; color: #2d3436; border-color: #2d3436; font-weight: bold; background: #fff; }
+
+        .btn-group { text-align: center; margin-top: 20px; }
+        button.action-btn { padding: 12px 35px; font-size: 1.1rem; border-radius: 10px; border: none; cursor: pointer; font-weight: bold; transition: 0.2s; color: white; }
+        .magic { background: #8e44ad; }
+        .check { background: #27ae60; }
+        .msg { margin-top: 20px; font-size: 1.4rem; text-align: center; font-weight: bold; min-height: 40px; }
+    </style>
+</head>
+<body>
+
+<div class="main-container">
+    <div class="nav-tabs">
+        <button class="tab-link active" onclick="switchTab(event, 'step1')">1.神奇積木</button>
+        <button class="tab-link" onclick="switchTab(event, 'step2')">2.體重問題</button>
+        <button class="tab-link" onclick="switchTab(event, 'step3')">3.果凍練習</button>
+        <button class="tab-link" style="background:#8e44ad; color:white;" onclick="switchTab(event, 'step4')">4.魔王挑戰 🔥</button>
+    </div>
+
+    <div id="step1" class="content-section active">
+        <div class="lab-visual">
+            <div class="block-row">
+                <div style="width:120px; font-weight:bold; color:var(--base-red)">主角 (1倍)</div>
+                <div class="block base-style" style="width: 100px;">10</div>
+            </div>
+            <div class="block-row">
+                <div style="width:120px; font-weight:bold; color:var(--comp-blue)">跟班 (比較)</div>
+                <div id="labBar" class="block comp-style" style="width: 300px;">30</div>
+                <button onclick="changeLab(-50)">變短</button>
+                <button onclick="changeLab(50)">變長</button>
+            </div>
+        </div>
+        <div class="btn-group"><button class="action-btn magic" onclick="doMagic()">🔮 變身算算看</button></div>
+        <div id="labMsg" class="msg" style="opacity:0;">算式：<span id="vC">30</span> ÷ <span id="vB">10</span> = <span id="vR">3</span> 倍</div>
+    </div>
+
+    <div id="step2" class="content-section">
+        <div class="quiz-card">宇翔 40 公斤，爸爸 76 公斤。<br>問：爸爸是 <span style="background:white; padding:2px 8px;">宇翔</span> 的幾倍？</div>
+        <div class="drag-box">
+            <div id="q1-p" class="item" draggable="true" ondragstart="sd(event)">爸爸</div>
+            <div id="q1-y" class="item" draggable="true" ondragstart="sd(event)">宇翔</div>
+        </div>
+        <div class="drop-area">
+            <div id="d1-c" class="slot" ondrop="hd(event)" ondragover="aw(event)" ondragleave="lv(event)">放跟班</div>
+            <span>÷</span>
+            <div id="d1-b" class="slot" ondrop="hd(event)" ondragover="aw(event)" ondragleave="lv(event)">放主角</div>
+            <span>=</span>
+            <span id="ans1">？ 倍</span>
+        </div>
+        <div class="btn-group"><button class="action-btn check" onclick="c1()">檢查答案</button></div>
+        <div id="m1" class="msg"></div>
+    </div>
+
+    <div id="step3" class="content-section">
+        <div class="quiz-card">大堆 54 顆，小堆 36 顆。<br>問：大堆是 <span style="background:white; padding:2px 8px;">小堆</span> 的幾倍？</div>
+        <div class="drag-box">
+            <div id="q2-b" class="item" draggable="true" ondragstart="sd(event)">大堆</div>
+            <div id="q2-s" class="item" draggable="true" ondragstart="sd(event)">小堆</div>
+        </div>
+        <div class="drop-area">
+            <div id="d2-c" class="slot" ondrop="hd(event)" ondragover="aw(event)" ondragleave="lv(event)">放跟班</div>
+            <span>÷</span>
+            <div id="d2-b" class="slot" ondrop="hd(event)" ondragover="aw(event)" ondragleave="lv(event)">放主角</div>
+            <span>=</span>
+            <span id="ans2">？ 倍</span>
+        </div>
+        <div class="btn-group"><button class="action-btn check" onclick="c2()">檢查答案</button></div>
+        <div id="m2" class="msg"></div>
+    </div>
+
+    <div id="step4" class="content-section">
+        <div class="quiz-card" style="border-left-color:#8e44ad;">
+            爸爸身高 180 公分，小明身高 90 公斤。<br>
+            問：小明身高是 <span style="background:white; padding:2px 8px;">爸爸身高</span> 的幾倍？<br>
+            <small style="font-size:1rem; color:#666;">(注意：這題跟班比主角還要短喔！)</small>
+        </div>
+        <div class="drag-box">
+            <div id="q3-papa" class="item" draggable="true" ondragstart="sd(event)">爸爸</div>
+            <div id="q3-ming" class="item" draggable="true" ondragstart="sd(event)">小明</div>
+        </div>
+        <div class="drop-area" style="background:#f3e5f5;">
+            <div id="d3-c" class="slot" ondrop="hd(event)" ondragover="aw(event)" ondragleave="lv(event)">放跟班</div>
+            <span>÷</span>
+            <div id="d3-b" class="slot" ondrop="hd(event)" ondragover="aw(event)" ondragleave="lv(event)">放主角</div>
+            <span>=</span>
+            <span id="ans3">？ 倍</span>
+        </div>
+        <div class="btn-group"><button class="action-btn magic" onclick="c3()">挑戰魔王關</button></div>
+        <div id="m3" class="msg"></div>
+    </div>
+</div>
+
+<script>
+    function switchTab(e, n) {
+        let cs = document.getElementsByClassName("content-section");
+        for (let c of cs) c.classList.remove("active");
+        let ls = document.getElementsByClassName("tab-link");
+        for (let l of ls) l.classList.remove("active");
+        document.getElementById(n).classList.add("active");
+        e.currentTarget.classList.add("active");
+    }
+
+    let curW = 300;
+    function changeLab(v) {
+        curW = Math.max(50, Math.min(600, curW + v));
+        let b = document.getElementById('labBar');
+        b.style.width = curW + 'px';
+        b.innerText = curW / 10;
+        b.style.backgroundImage = 'none';
+        document.getElementById('labMsg').style.opacity = '0';
+    }
+    function doMagic() {
+        let b = document.getElementById('labBar');
+        b.style.backgroundImage = `linear-gradient(to right, transparent 98px, white 2px)`;
+        b.style.backgroundSize = '100px 100%';
+        document.getElementById('vC').innerText = curW/10; document.getElementById('vR').innerText = curW/100;
+        document.getElementById('labMsg').style.opacity = '1';
+    }
+
+    function aw(e) { e.preventDefault(); e.target.classList.add('hover'); }
+    function lv(e) { e.target.classList.remove('hover'); }
+    function sd(e) { e.dataTransfer.setData("t", e.target.id); }
+    function hd(e) {
+        e.preventDefault(); e.target.classList.remove('hover');
+        let id = e.dataTransfer.getData("t");
+        e.target.innerText = document.getElementById(id).innerText;
+        e.target.classList.add('filled'); e.target.dataset.a = id;
+    }
+
+    function c1() {
+        let b = document.getElementById('d1-b').dataset.a; let c = document.getElementById('d1-c').dataset.a;
+        let m = document.getElementById('m1');
+        if(b==='q1-y' && c==='q1-p') { m.innerHTML="🟢 對了！算式：76 ÷ 40 = 1.9"; m.style.color="#27ae60"; document.getElementById('ans1').innerText="1.9"; }
+        else { m.innerHTML="🔴 找找「的」前面是誰？宇翔才是主角。"; m.style.color="#e74c3c"; }
+    }
+    function c2() {
+        let b = document.getElementById('d2-b').dataset.a; let c = document.getElementById('d2-c').dataset.a;
+        let m = document.getElementById('m2');
+        if(b==='q2-s' && c==='q2-b') { m.innerHTML="🟢 答對了！算式：54 ÷ 36 = 1.5"; m.style.color="#27ae60"; document.getElementById('ans2').innerText="1.5"; }
+        else { m.innerHTML="🔴 小堆才是主角喔！"; m.style.color="#e74c3c"; }
+    }
+    function c3() {
+        let b = document.getElementById('d3-b').dataset.a; let c = document.getElementById('d3-c').dataset.a;
+        let m = document.getElementById('m3');
+        if(b==='q3-papa' && c==='q3-ming') { 
+            m.innerHTML="🔥 挑戰成功！雖然小明比較矮，但他還是要除以主角。<br>算式：90 ÷ 180 = 0.5 倍"; 
+            m.style.color="#8e44ad"; document.getElementById('ans3').innerText="0.5"; 
+        } else { 
+            m.innerHTML="💡 誰的身高後面接個「的」？爸爸才是主角(基準量)！"; m.style.color="#e74c3c"; 
+        }
+    }
+</script>
+</body>
+</html>
